@@ -47,7 +47,7 @@ jobs:
       - name: Upload Binaries (unsigned)
         uses: actions/upload-artifact@v2
         with:
-          name: go-binaries-unsigned
+          name: go-binaries-unsigned.zip
           path: go-binaries-unsigned.zip
 
   sign:
@@ -60,7 +60,7 @@ jobs:
       - name: Download Binaries (unsigned)
         uses: actions/download-artifact@v2
         with:
-          name: go-binaries-unsigned
+          name: go-binaries-unsigned.zip
           path: go-binaries-unsigned.zip
       - name: Decompress Binaries (unsigned)
         run: |-
@@ -78,7 +78,7 @@ jobs:
       - name: Upload Binaries (signed)
         uses: actions/upload-artifact@v2
         with:
-          name: go-binaries-signed
+          name: go-binaries-signed.zip
           path: go-binaries-signed.zip
   
   cleanup:
@@ -93,5 +93,5 @@ jobs:
         with:
           log_level: 'debug'
           min_bytes: '0'
-          artifact_name: 'go-binaries-unsigned'
-          run_id: '${{ needs.generate.outputs.target_run_id }}'
+          artifact_name: 'go-binaries-unsigned.zip'
+          run_id: '${{ needs.compile.outputs.target_run_id }}'

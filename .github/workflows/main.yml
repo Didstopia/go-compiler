@@ -1,8 +1,5 @@
 name: Compile Go for Apple Silicon
 
-## FIXME: Run the build step on ubuntu-latest,
-##        then run the signing and uploading on macos-latest
-
 on:
   push:
     branches: [ master ]
@@ -39,19 +36,19 @@ jobs:
         run: docker build --rm -t didstopia/go-compiler:latest .
       - name: Compile Go
         run: docker run --rm -v ${PWD}/.cache:/tmp -v ${PWD}/data:/data -e GOARCH=${GOARCH} -e GOOS=${GOOS} didstopia/go-compiler:latest
-      - name: Compress Binaries (unsigned)
-        run: |-
-          ls -la
-          ls -la data
-          #zip -rq go-binaries-unsigned.zip data/
-          tar -cvf go-unsigned.tar data/
-          ls -la
-          ls -la data
+      # - name: Compress Binaries (unsigned)
+      #   run: |-
+      #     ls -la
+      #     ls -la data
+      #     #zip -rq go-binaries-unsigned.zip data/
+      #     tar -cvf go-unsigned.tar data/
+      #     ls -la
+      #     ls -la data
       - name: Upload Binaries (unsigned)
         uses: actions/upload-artifact@v2
         with:
           name: go-unsigned
-          path: go-unsigned.tar
+          path: data
 
   sign:
     needs: compile
@@ -64,40 +61,39 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: go-unsigned
-          path: go-unsigned.tar
-      - name: Decompress Binaries (unsigned)
-        run: |-
-          ls -la
-          ls -la data
-          #unzip go-binaries-unsigned.zip -d data
-          tar -xvf go-unsigned.tar
-          ls -la
-          ls -la data
+          path: data
+      # - name: Decompress Binaries (unsigned)
+      #   run: |-
+      #     ls -la
+      #     #unzip go-binaries-unsigned.zip -d data
+      #     tar -xvf go-unsigned.tar
+      #     ls -la
+      #     ls -la data
       - name: Sign Binaries
         run: ./codesign.sh
-      - name: Compress Binaries (signed)
-        run: |-
-          #zip -rq go-binaries-signed.zip data/
-          tar -cvf go-signed.tar data/
-          ls -la
-          ls -la data
+      # - name: Compress Binaries (signed)
+      #   run: |-
+      #     #zip -rq go-binaries-signed.zip data/
+      #     tar -cvf go-signed.tar data/
+      #     ls -la
+      #     ls -la data
       - name: Upload Binaries (signed)
         uses: actions/upload-artifact@v2
         with:
           name: go-signed
-          path: go-signed.tar
+          path: data
   
-  # cleanup:
-  #   needs: [compile, sign]
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 5
-  #   continue-on-error: true
-  #   steps:
-  #     - name: Cleanup Build Artifacts
-  #       if: ${{ github.event.client_payload.run_id }}
-  #       uses: jimschubert/delete-artifacts-action@v1
-  #       with:
-  #         log_level: 'debug'
-  #         min_bytes: '0'
-  #         artifact_name: 'go-unsigned'
-  #         run_id: '${{ needs.compile.outputs.target_run_id }}'
+  cleanup:
+    needs: [compile, sign]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - name: Cleanup Build Artifacts
+        if: ${{ github.event.client_payload.run_id }}
+        uses: jimschubert/delete-artifacts-action@v1
+        with:
+          log_level: 'debug'
+          min_bytes: '0'
+          artifact_name: 'go-unsigned'
+          run_id: '${{ needs.compile.outputs.target_run_id }}'

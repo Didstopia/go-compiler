@@ -1,0 +1,47 @@
+name: Compile Go for Apple Silicon
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+env:
+  GOARCH: arm64
+  GOOS: darwin
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Setup Caching
+        uses: actions/cache@v2
+        with:
+          path: |
+            .cache
+          key: ${{ runner.os }}-cache-${{ hashFiles('.cache/**') }}
+          restore-keys: |
+            ${{ runner.os }}-cache-
+
+      - name: Pull Docker Image
+        run: docker pull didstopia/go-compiler:latest
+      
+      - name: Build Docker Image
+        run: docker build --rm -t didstopia/go-compiler:latest .
+      
+      - name: Compile Go
+        run: docker run --rm -v ${PWD}/.cache:/tmp -v ${PWD}/data:/data -e GOARCH=${GOARCH} -e GOOS=${GOOS} didstopia/go-compiler:latest
+      
+      - name: Sign Binaries
+        run: ./codesign.sh
+
+      - name: Upload Binaries
+        uses: actions/upload-artifact@v2
+        with:
+          name: go-binaries
+          path: data/ # TODO: Try both with and without the slash?

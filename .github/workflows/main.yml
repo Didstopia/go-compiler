@@ -35,7 +35,7 @@ jobs:
         run: docker build --rm -t didstopia/go-compiler:latest .
       - name: Compile Go
         run: docker run --rm -v ${PWD}/.cache:/tmp -v ${PWD}/data:/data -e GOARCH=${GOARCH} -e GOOS=${GOOS} didstopia/go-compiler:latest
-      - name: Upload Binaries
+      - name: Upload Binaries (unsigned)
         uses: actions/upload-artifact@v2
         with:
           name: go-binaries-unsigned
@@ -48,7 +48,11 @@ jobs:
       - uses: actions/checkout@v2
       - name: Sign Binaries
         run: ./codesign.sh
-      - name: Upload Binaries
+      - name: Download Binaries (unsigned)
+        uses: actions/download-artifact@v2
+        with:
+          name: go-binaries-unsigned
+      - name: Upload Binaries (signed)
         uses: actions/upload-artifact@v2
         with:
           name: go-binaries-signed

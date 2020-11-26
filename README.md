@@ -5,7 +5,7 @@ A Docker image for compiling Go to any supported combination of platform and arc
 ## Usage
 
 This example compiles Go for Apple Silicon:
-> docker run --rm -v ${PWD}/.cache:/tmp -v ${PWD}/data:/data -e GOARCH=arm64 GOOS=darwin didstopia/go-compiler:latest
+> docker run --rm -v ${PWD}/.cache:/tmp -v ${PWD}/data:/data -e GOARCH=arm64 -e GOOS=darwin didstopia/go-compiler:latest
 
 Note that the mountable `/data` directory will contain all the compiled/bootstrapped files.
 

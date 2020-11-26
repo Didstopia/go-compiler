@@ -41,14 +41,17 @@ jobs:
         run: docker run --rm -v ${PWD}/.cache:/tmp -v ${PWD}/data:/data -e GOARCH=${GOARCH} -e GOOS=${GOOS} didstopia/go-compiler:latest
       - name: Compress Binaries (unsigned)
         run: |-
-          zip -rq go-binaries-unsigned.zip data/
+          ls -la
+          ls -la data
+          #zip -rq go-binaries-unsigned.zip data/
+          tar -cvf go-unsigned.tar data/
           ls -la
           ls -la data
       - name: Upload Binaries (unsigned)
         uses: actions/upload-artifact@v2
         with:
-          name: go-binaries-unsigned.zip
-          path: go-binaries-unsigned.zip
+          name: go-unsigned
+          path: go-unsigned.tar
 
   sign:
     needs: compile
@@ -60,38 +63,41 @@ jobs:
       - name: Download Binaries (unsigned)
         uses: actions/download-artifact@v2
         with:
-          name: go-binaries-unsigned.zip
-          path: go-binaries-unsigned.zip
+          name: go-unsigned
+          path: go-unsigned.tar
       - name: Decompress Binaries (unsigned)
         run: |-
           ls -la
-          unzip go-binaries-unsigned.zip -d data
+          ls -la data
+          #unzip go-binaries-unsigned.zip -d data
+          tar -xvf go-unsigned.tar
           ls -la
           ls -la data
       - name: Sign Binaries
         run: ./codesign.sh
       - name: Compress Binaries (signed)
         run: |-
-          zip -rq go-binaries-signed.zip data/
+          #zip -rq go-binaries-signed.zip data/
+          tar -cvf go-signed.tar data/
           ls -la
           ls -la data
       - name: Upload Binaries (signed)
         uses: actions/upload-artifact@v2
         with:
-          name: go-binaries-signed.zip
-          path: go-binaries-signed.zip
+          name: go-signed
+          path: go-signed.tar
   
-  cleanup:
-    needs: [compile, sign]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    continue-on-error: true
-    steps:
-      - name: Cleanup Build Artifacts
-        if: ${{ github.event.client_payload.run_id }}
-        uses: jimschubert/delete-artifacts-action@v1
-        with:
-          log_level: 'debug'
-          min_bytes: '0'
-          artifact_name: 'go-binaries-unsigned.zip'
-          run_id: '${{ needs.compile.outputs.target_run_id }}'
+  # cleanup:
+  #   needs: [compile, sign]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 5
+  #   continue-on-error: true
+  #   steps:
+  #     - name: Cleanup Build Artifacts
+  #       if: ${{ github.event.client_payload.run_id }}
+  #       uses: jimschubert/delete-artifacts-action@v1
+  #       with:
+  #         log_level: 'debug'
+  #         min_bytes: '0'
+  #         artifact_name: 'go-unsigned'
+  #         run_id: '${{ needs.compile.outputs.target_run_id }}'

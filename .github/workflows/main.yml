@@ -22,9 +22,7 @@ jobs:
     timeout-minutes: 60
     continue-on-error: false
     outputs:
-      target_run_id:
-        description: "Workflow Step Identifier"
-        value: ${{ github.run_id }}
+      target_run_id: ${{ github.run_id }}
     steps:
       - uses: actions/checkout@v2
       - name: Setup Caching
